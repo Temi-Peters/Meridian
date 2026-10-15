@@ -1,0 +1,86 @@
+# cloud-init.example.yaml
+#
+# What exit.sh renders and passes to the provider when creating an exit server.
+# The real file is generated per launch with that region's keys substituted in,
+# written with owner-only permissions, and deleted once the instance is created.
+#
+# Placeholders below stand in for values the script fills:
+#   SERVER_PRIVATE_KEY   this region's permanent server key
+#   PHONE_PUBLIC_KEY     roaming client public key
+#   PHONE_PSK            preshared key for that client
+#   10.9.0.0/24          the exit tunnel subnet
+
+#cloud-config
+package_update: true
+packages:
+  - wireguard
+  - nftables
+
+write_files:
+  - path: /etc/wireguard/wg0.conf
+    permissions: "0600"
+    content: |
+      [Interface]
+      PrivateKey = SERVER_PRIVATE_KEY
+      Address = 10.9.0.1/24
+      ListenPort = 51820
+
+      [Peer]
+      PublicKey = PHONE_PUBLIC_KEY
+      PresharedKey = PHONE_PSK
+      AllowedIPs = 10.9.0.2/32
+
+  - path: /etc/sysctl.d/99-wireguard.conf
+    content: |
+      net.ipv4.ip_forward=1
+
+  - path: /etc/nftables-exit.conf
+    permissions: "0644"
+    content: |
+      #!/usr/sbin/nft -f
+      flush ruleset
+
+      table inet filter {
+        chain input {
+          type filter hook input priority 0; policy drop;
+          ct state established,related accept
+          iif "lo" accept
+          ip protocol icmp accept
+          meta l4proto ipv6-icmp accept
+          tcp dport 22 accept
+          udp dport { 443, 51820 } accept
+        }
+        chain forward {
+          type filter hook forward priority 0; policy drop;
+          iifname "wg0" accept
+          oifname "wg0" ct state established,related accept
+        }
+      }
+
+      table inet nat {
+        chain prerouting {
+          type nat hook prerouting priority -100;
+          udp dport 443 redirect to :51820
+        }
+        chain postrouting {
+          type nat hook postrouting priority 100;
+          ip saddr 10.9.0.0/24 oifname != "wg0" masquerade
+        }
+      }
+
+runcmd:
+  - sysctl --system
+  - cp /etc/nftables-exit.conf /etc/nftables.conf
+  - systemctl enable --now nftables
+  - systemctl enable --now wg-quick@wg0
+
+# Notes on the firewall shape:
+#
+# input   drops everything not explicitly allowed. Secure shell for debugging,
+#         the tunnel port, and 443 for networks that only pass web-shaped traffic.
+# forward drops by default, which matters because this machine routes. Traffic
+#         arriving on the tunnel is allowed out; only established flows come back.
+# nat     prerouting sends anything arriving on UDP 443 to the tunnel port, so one
+#         server answers on both without running two instances. postrouting
+#         rewrites the source address of tunnel traffic leaving by any other
+#         interface, so replies can find their way home.

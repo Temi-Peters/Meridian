@@ -1,0 +1,12 @@
+# Never commit anything that identifies a real deployment or holds a secret.
+*.key
+*.pub
+*.psk
+*.conf
+!*.example.conf
+*.token
+regions.conf
+userdata.yaml
+exits/
+clients/
+.qr-shown

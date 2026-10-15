@@ -1,0 +1,9 @@
+# One line per region: PROVIDER_REGION_CODE  DYNAMIC_DNS_HOSTNAME
+# Region codes come from the provider's tool, for example: vultr-cli regions list
+# The hostname is the subdomain only, without the provider's domain suffix.
+# Pick names with no connection to your own name or any domain you own.
+
+ams   example-ams
+ewr   example-nyc
+nrt   example-tokyo
+syd   example-sydney

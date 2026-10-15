@@ -102,7 +102,7 @@ sudo wg-quick up /opt/homebrew/etc/wireguard/wg0.conf
 sudo wg show
 ```
 
-macOS names the interface `utunN`, not `wg0`. Any health check must therefore test `wg show interfaces` rather than looking for a device called wg0. This cost an hour of confusion during the original build.
+macOS names the interface `utunN`, not `wg0`. Any health check must therefore test `wg show interfaces`, because no device called wg0 exists. This cost an hour of confusion during the original build.
 
 ### 5. Dynamic DNS
 
@@ -183,7 +183,7 @@ Turn Wi-Fi off on the phone so it is on mobile data, activate the tunnel, and ch
 
 Nothing so far survives a reboot. A boot script that re-applies forwarding, loads the firewall anchor, brings up the tunnel if it is down, and refreshes the dynamic DNS record, run by the system service manager at boot and on a timer, closes that gap. On macOS that is a launchd daemon; on Linux, `systemctl enable wg-quick@wg0` plus a timer for the DNS update, which is considerably simpler.
 
-Make the script safe to run repeatedly, and have it test actual state rather than assuming.
+Make the script safe to run repeatedly, and have it check the actual state before each change.
 
 ---
 

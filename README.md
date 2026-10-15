@@ -1,6 +1,6 @@
 # Meridian
 
-A self-hosted VPN built from parts rather than bought as a subscription. Two halves that work independently:
+A self-hosted VPN built from parts, so there is no subscription to pay. It has two halves that work independently:
 
 1. **A home server.** WireGuard on a machine at home, reachable from anywhere, so a phone on public Wi-Fi gets an encrypted tunnel back to the house and remote access to the home network.
 2. **On-demand exit nodes.** A command line tool that creates a WireGuard server in any of about 30 cities worldwide, hands the phone a profile, and destroys the server when it is no longer wanted. Billed by the hour, so a weekend costs pennies.
@@ -42,7 +42,7 @@ destroyed exit-ams (a1b2c3d4). Billing stopped. Keys and DNS name kept for next 
 
 A WireGuard peer is just a keypair. The private key never leaves the device it belongs to; the public key is handed to whoever needs to recognise it. There is no login, no certificate authority, and no server-versus-client distinction in the protocol itself.
 
-**Home server.** The server holds a private subnet (10.8.0.0/24) and listens on one UDP port. The router forwards that port to it. Because home broadband addresses change, a dynamic domain name record follows the address, so clients connect to a name rather than a number. Packet forwarding and address translation on the server let client traffic exit through the home connection and find its way back.
+**Home server.** The server holds a private subnet (10.8.0.0/24) and listens on one UDP port. The router forwards that port to it. Because home broadband addresses change, a dynamic domain name record follows the address, so clients always connect by name. Packet forwarding and address translation on the server let client traffic exit through the home connection and find its way back.
 
 **Exit nodes.** Each region keeps a permanent identity on the control machine: a server keypair, preshared keys, and a domain name. Creating an exit provisions a virtual machine, injects that region's existing private key through cloud-init, and repoints the region's domain name at the new address. The phone therefore scans one QR code per city, ever, and every later server in that city works with the profile it already has.
 
@@ -61,15 +61,15 @@ Full detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reproduction instru
 
 ## Design decisions worth defending
 
-**Stable keys per region, not per server.** Fresh keys on every provision would be marginally safer, but would mean re-scanning a QR code every single time. Since the provider already runs the machine your traffic exits from, injecting a stable key through their API adds little exposure for a large usability gain. The trade is stated plainly rather than hidden.
+**Stable keys per region.** Fresh keys on every provision would be marginally safer, but would mean re-scanning a QR code every single time. Since the provider already runs the machine your traffic exits from, injecting a stable key through their API adds little exposure for a large usability gain. The trade-off is deliberate and stated here.
 
 **Destroy, never stop.** Cloud providers keep billing for a stopped instance because the disk and address still exist. The tool has no stop command for that reason.
 
 **UDP 443 as well as 51820.** Networks that filter aggressively often allow anything that looks like web traffic. Listening on 443 as well gets through most hotel and cafe filters. It is not a disguise: a deep packet inspection system still sees WireGuard.
 
-**An anchor, not an edit.** On macOS the firewall rules load into their own anchor rather than modifying the system firewall configuration, so nothing the operating system owns is touched and removal is a single flush.
+**Firewall rules in their own anchor.** On macOS the firewall rules load into their own anchor and leave the system firewall configuration untouched, so nothing the operating system owns is changed and removal is a single flush.
 
-**Everything reversible.** Every system change made during the build went into a rollback log with the exact command to undo it, written at the time rather than reconstructed later. [UNDO.example.md](UNDO.example.md) is that log.
+**Everything reversible.** Every system change made during the build went into a rollback log with the exact command to undo it, written at the time of each change. [UNDO.example.md](UNDO.example.md) is that log.
 
 ## Honest limitations
 
@@ -81,7 +81,7 @@ Full detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Reproduction instru
 
 ## Status
 
-Running and in daily use as of September 2026. The home server currently runs on a laptop, which means the home half is only reachable while that machine is home and awake. The exit half has no such dependency. Moving the home server to dedicated always-on hardware is a documented path rather than a required next step.
+Running and in daily use as of September 2026. The home server currently runs on a laptop, which means the home half is only reachable while that machine is home and awake. The exit half has no such dependency. Moving the home server to dedicated always-on hardware is documented as an optional next step.
 
 ## License
 

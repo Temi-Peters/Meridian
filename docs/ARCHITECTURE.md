@@ -100,7 +100,7 @@ Firewall shape:
 
 ### Cost model
 
-Instances bill by the hour with a one-hour minimum, so every launch costs at least the price of an hour regardless of how briefly it lives. A stopped instance still bills, because the disk and address persist, which is why the tool destroys rather than stops. Practically: launch per outing, not per browse.
+Instances bill by the hour with a one-hour minimum, so every launch costs at least the price of an hour regardless of how briefly it lives. A stopped instance still bills, because the disk and address persist, which is why the tool destroys instances outright. In practice, launch one exit per outing and keep it for the whole outing.
 
 ## Threat model
 
@@ -108,7 +108,7 @@ Instances bill by the hour with a one-hour minimum, so every launch costs at lea
 
 **Does not protect against:** the internet provider at whichever end traffic exits, who sees the same as always; websites, which see a real address belonging to a real person; malware on the devices themselves; a compromise of the server, which is now the most valuable machine in the house; a legal request to the hosting provider, who holds billing details.
 
-**Moved rather than removed.** The honest summary is that trust was not eliminated, it was relocated to parties chosen deliberately and to hardware under direct control.
+**Where the trust sits.** The honest summary is that this setup still relies on trust, now placed in parties chosen deliberately and in hardware under direct control.
 
 ## What would change at larger scale
 

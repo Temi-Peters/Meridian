@@ -36,7 +36,7 @@ Do this if a device is lost, or if a key may have been exposed.
 
 ## Diagnosing a failure
 
-Work along the path rather than guessing. The client application tells you where to start:
+Work along the path one step at a time. The client application tells you where to start:
 
 **Bytes sent, none received, no handshake.** Packets are leaving the client and nothing is answering. The fault is between the internet and the server: port forward missing or not applied, the dynamic DNS record stale, or the server down. Run the tcpdump check above and reconnect the client. Lines appearing means packets reach the machine and the problem is local to it. Silence means the router is dropping them.
 
